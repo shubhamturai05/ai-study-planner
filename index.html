@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Study Planner</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:720px;margin:24px auto;padding:0 16px;color:#1f2937}
+h1{color:#2563eb} .row{display:flex;gap:8px;margin:6px 0;flex-wrap:wrap}
+input,select,button{padding:8px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px}
+button{background:#2563eb;color:#fff;border:0;cursor:pointer} button.sec{background:#64748b}
+.day{border-left:4px solid #2563eb;padding:6px 12px;margin:8px 0;background:#f1f5f9;border-radius:4px}
+</style></head><body>
+<h1>Study Planner</h1>
+<p>Add subjects with exam date and difficulty. Get a day-by-day plan that gives more time to harder, sooner exams.</p>
+<div class="row"><input id="name" placeholder="Subject"><input id="date" type="date">
+<select id="diff"><option value="1">Easy</option><option value="2" selected>Medium</option><option value="3">Hard</option></select>
+<button onclick="addSub()">Add</button></div>
+<div class="row">Hours per day: <input id="hours" type="number" value="4" min="1" max="12" style="width:70px">
+<button onclick="plan()">Generate plan</button><button class="sec" onclick="subs=[];render();out.innerHTML=''">Reset</button></div>
+<div id="list"></div><div id="out"></div>
+<script>
+let subs=[]; const out=document.getElementById('out');
+function addSub(){const n=name.value.trim(),d=date.value; if(!n||!d)return alert('Enter subject and date');
+ subs.push({n,d:new Date(d),w:+diff.value}); name.value=''; render();}
+function render(){list.innerHTML=subs.map(s=>`<div>• ${s.n} — ${s.d.toDateString()} (difficulty ${s.w})</div>`).join('');}
+function plan(){
+ if(!subs.length)return alert('Add at least one subject');
+ const H=+hours.value, today=new Date(); today.setHours(0,0,0,0);
+ const last=Math.max(...subs.map(s=>s.d)); let html='';
+ for(let t=new Date(today); t<=last; t.setDate(t.getDate()+1)){
+   const active=subs.filter(s=>s.d>=t); if(!active.length)continue;
+   const weights=active.map(s=>s.w*(1+10/(Math.max(1,(s.d-t)/864e5)+1)));
+   const total=weights.reduce((a,b)=>a+b,0);
+   html+=`<div class="day"><b>${t.toDateString()}</b><br>`+active.map((s,i)=>
+     `${s.n}: ${(H*weights[i]/total).toFixed(1)} h`).join(' &nbsp;|&nbsp; ')+'</div>';
+ }
+ out.innerHTML=html||'No upcoming exam dates.';
+}
+</script></body></html>
